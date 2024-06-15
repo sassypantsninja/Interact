@@ -1,0 +1,71 @@
+const Web3 = require('web3');
+require('dotenv').config();
+
+const web3 = new Web3(new Web3.providers.HttpProvider(process.env.INFURA_URL));
+
+const account = web3.eth.accounts.privateKeyToAccount(process.env.PRIVATE_KEY);
+web3.eth.accounts.wallet.add(account);
+
+const contractAddress = 'DEPLOYED_CONTRACT_ADDRESS';
+const abi = JSON.parse('YOUR_CONTRACT_ABI');
+const contract = new web3.eth.Contract(abi, contractAddress);
+
+const recipient = '0xRecipientAddress'; // Example recipient address
+const amount = web3.utils.toWei('1', 'ether'); // Example amount
+const data = '0x'; // Example data, typically empty for plain Ether transfer
+const authCode = 123456; // Example authentication code
+const txId = 0; // Example transaction ID
+
+(async () => {
+    // Submit a transaction
+    const submitTx = contract.methods.submitTransaction(recipient, amount, data, authCode);
+    const gasSubmit = await submitTx.estimateGas({ from: account.address });
+    const gasPriceSubmit = await web3.eth.getGasPrice();
+
+    await submitTx.send({
+        from: account.address,
+        gas: gasSubmit,
+        gasPrice: gasPriceSubmit,
+    });
+
+    console.log('Transaction submitted');
+
+    // Confirm a transaction
+    const confirmTx = contract.methods.confirmTransaction(txId);
+    const gasConfirm = await confirmTx.estimateGas({ from: account.address });
+    const gasPriceConfirm = await web3.eth.getGasPrice();
+
+    await confirmTx.send({
+        from: account.address,
+        gas: gasConfirm,
+        gasPrice: gasPriceConfirm,
+    });
+
+    console.log('Transaction confirmed');
+
+    // Execute a transaction
+    const executeTx = contract.methods.executeTransaction(txId);
+    const gasExecute = await executeTx.estimateGas({ from: account.address });
+    const gasPriceExecute = await web3.eth.getGasPrice();
+
+    await executeTx.send({
+        from: account.address,
+        gas: gasExecute,
+        gasPrice: gasPriceExecute,
+    });
+
+    console.log('Transaction executed');
+
+    // Revoke confirmation
+    const revokeTx = contract.methods.revokeConfirmation(txId);
+    const gasRevoke = await revokeTx.estimateGas({ from: account.address });
+    const gasPriceRevoke = await web3.eth.getGasPrice();
+
+    await revokeTx.send({
+        from: account.address,
+        gas: gasRevoke,
+        gasPrice: gasPriceRevoke,
+    });
+
+    console.log('Confirmation revoked');
+})();
