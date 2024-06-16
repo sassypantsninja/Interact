@@ -1,0 +1,41 @@
+const Web3 = require('web3');
+require('dotenv').config();
+
+const web3 = new Web3(new Web3.providers.HttpProvider(process.env.INFURA_URL));
+
+const account = web3.eth.accounts.privateKeyToAccount(process.env.PRIVATE_KEY);
+web3.eth.accounts.wallet.add(account);
+
+const contractAddress = 'DEPLOYED_CONTRACT_ADDRESS';
+const abi = JSON.parse('YOUR_CONTRACT_ABI');
+const contract = new web3.eth.Contract(abi, contractAddress);
+
+const tokenAmount = web3.utils.toWei('100', 'ether'); // Example token amount
+
+(async () => {
+    // Sell tokens
+    const sellTx = contract.methods.sellTokens(tokenAmount);
+    const gasSell = await sellTx.estimateGas({ from: account.address });
+    const gasPriceSell = await web3.eth.getGasPrice();
+
+    await sellTx.send({
+        from: account.address,
+        gas: gasSell,
+        gasPrice: gasPriceSell,
+    });
+
+    console.log('Tokens sold');
+
+    // Withdraw ETH
+    const withdrawTx = contract.methods.withdrawETH();
+    const gasWithdraw = await withdrawTx.estimateGas({ from: account.address });
+    const gasPriceWithdraw = await web3.eth.getGasPrice();
+
+    await withdrawTx.send({
+        from: account.address,
+        gas: gasWithdraw,
+        gasPrice: gasPriceWithdraw,
+    });
+
+    console.log('ETH withdrawn');
+})();
