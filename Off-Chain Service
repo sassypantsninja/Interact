@@ -1,0 +1,32 @@
+const { ethers } = require("ethers");
+const axios = require("axios");
+
+// Connect to Ethereum provider (e.g., Infura)
+const provider = new ethers.providers.InfuraProvider("homestead", "YOUR_INFURA_PROJECT_ID");
+const wallet = new ethers.Wallet("YOUR_PRIVATE_KEY", provider);
+const contractAddress = "YOUR_CONTRACT_ADDRESS";
+const contractABI = [ /* ABI of your contract */ ];
+const contract = new ethers.Contract(contractAddress, contractABI, wallet);
+
+// Function to get data from CEX API and execute trade on DEX
+async function getCexDataAndExecuteTrade() {
+    try {
+        // Get data from CEX API (e.g., Binance)
+        const response = await axios.get("https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT");
+        const price = parseFloat(response.data.price);
+        const user = "USER_ADDRESS";
+        const amount = ethers.utils.parseUnits("1.0", 18); // 1 ETH
+
+        // Determine trade type and execute trade
+        const tradeType = price > 3000 ? "sell" : "buy"; // Example condition
+        const tx = await contract.executeTrade(user, amount, price, tradeType);
+        await tx.wait();
+
+        console.log(`Trade executed: ${tradeType} ${amount.toString()} at ${price}`);
+    } catch (error) {
+        console.error("Error executing trade:", error);
+    }
+}
+
+// Schedule the function to run periodically
+setInterval(getCexDataAndExecuteTrade, 60000); // Every 60 seconds
